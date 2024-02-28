@@ -42,5 +42,77 @@ app.MapGet("/api/campsites/{id}", (CreekRiverDbContext db, int id) =>
     return db.Campsites.Include(c => c.CampsiteType).Single(c => c.Id == id);
 });
 
+app.MapPost("/api/campsites", (CreekRiverDbContext db, Campsite campsite) =>
+{
+    db.Campsites.Add(campsite);
+    db.SaveChanges();
+    return Results.Created($"/api/campsites/{campsite.Id}", campsite);
+});
+
+app.MapDelete("/api/campsites/{id}", (CreekRiverDbContext db, int id) =>
+{
+    Campsite campsite = db.Campsites.SingleOrDefault(campsite => campsite.Id == id);
+    if (campsite == null)
+    {
+        return Results.NotFound();
+    }
+    db.Campsites.Remove(campsite);
+    db.SaveChanges();
+    return Results.NoContent();
+
+});
+
+app.MapPut("/api/campsites/{id}", (CreekRiverDbContext db, int id, Campsite campsite) =>
+{
+    Campsite campsiteToUpdate = db.Campsites.SingleOrDefault(campsite => campsite.Id == id);
+    if (campsiteToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    campsiteToUpdate.Nickname = campsite.Nickname;
+    campsiteToUpdate.CampsiteTypeId = campsite.CampsiteTypeId;
+    campsiteToUpdate.ImageUrl = campsite.ImageUrl;
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+app.MapGet("/api/reservations", (CreekRiverDbContext db) =>
+{
+    return db.Reservations
+        .Include(r => r.UserProfile)
+        .Include(r => r.Campsite)
+        .ThenInclude(c => c.CampsiteType)
+        .OrderBy(res => res.CheckinDate)
+        .ToList();
+});
+
+app.MapPost("/api/reservations", (CreekRiverDbContext db, Reservation newRes) =>
+{
+    try
+    {
+        db.Reservations.Add(newRes);
+        db.SaveChanges();
+        return Results.Created($"/api/reservations/{newRes.Id}", newRes);
+    }
+    catch (DbUpdateException)
+    {
+        return Results.BadRequest("Invalid data submitted");
+    }
+});
+
+app.MapDelete("/api/reservations/{id}", (CreekRiverDbContext db, int id) =>
+{
+    Reservation reservation = db.Reservations.SingleOrDefault(reservation => reservation.Id == id);
+    if (reservation == null)
+    {
+        return Results.NotFound();
+    }
+    db.Reservations.Remove(reservation);
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+
 app.Run();
 

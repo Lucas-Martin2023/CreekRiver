@@ -40,7 +40,7 @@ public class CreekRiverDbContext : DbContext
             Id = 1,
             FirstName = "John",
             LastName = "Doe",
-            Email = "john@doe.com"
+            Email = "john@doe.com",
         });
 
         // Seed data with Reservation
